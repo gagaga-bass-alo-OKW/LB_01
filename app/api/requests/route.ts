@@ -57,7 +57,7 @@ let resolvedOwnerSlackId = ownerSlackId ?? null;
 let book;
 
 try {
-  book = await getBookById(bookId);
+  book = await getBookById(bookId!);
 
   if (!resolvedOwnerSlackId && book?.owner) {
     const id = await getSlackIdByName(book.owner);
