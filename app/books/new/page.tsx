@@ -140,7 +140,7 @@ export default function NewBookPage() {
             </div>
 
             <div>
-  <label className="block mb-1">所有者(必須・slackの表示名)</label>
+  <label className="block mb-1">所有者(必須・slackの表示名)・あるいは図書館の本の紹介</label>
 
   <input
     type="text"
