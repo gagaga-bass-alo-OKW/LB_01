@@ -32,21 +32,39 @@ export async function POST(request: Request) {
       };
     }
 
-    const { bookId, bookTitle, requester, period, comment, requesterSlackId, requesterPassword, ownerSlackId } = body;
+    const {
+  bookId,
+  bookTitle,
+  requester,
+  period,
+  comment,
+  requesterSlackId,
+  requesterPassword,
+  ownerSlackId,
+} = body;
 
-    // book から owner を取得して slackId を補完
-    let resolvedRequesterSlackId = requesterSlackId ?? null;
-    let resolvedOwnerSlackId = ownerSlackId ?? null;
-    let book;
+// 必須チェック
+if (!bookId) {
+  return Response.json(
+    { error: "bookId is required" },
+    { status: 400 }
+  );
+}
 
-    try {
-      book = await getBookById(bookId);
+// book から owner を取得して slackId を補完
+let resolvedRequesterSlackId = requesterSlackId ?? null;
+let resolvedOwnerSlackId = ownerSlackId ?? null;
+let book;
 
-      if (!resolvedOwnerSlackId && book?.owner) {
-        const id = await getSlackIdByName(book.owner);
-        if (id) resolvedOwnerSlackId = id;
-      }
+try {
+  book = await getBookById(bookId);
 
+  if (!resolvedOwnerSlackId && book?.owner) {
+    const id = await getSlackIdByName(book.owner);
+    if (id) {
+      resolvedOwnerSlackId = id;
+    }
+  }
       if (!resolvedRequesterSlackId && requester) {
         const id = await getSlackIdByName(requester, requesterPassword);
         if (id) resolvedRequesterSlackId = id;
