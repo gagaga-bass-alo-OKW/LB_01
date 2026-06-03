@@ -16,28 +16,50 @@ export default function NewBookPage() {
   const [reason, setReason] = useState("");
   const [owner, setOwner] = useState("");
 
-
-
-
+  // ✅ ISBNからGoogle Books API取得
   const fetchBookInfo = async () => {
     try {
-      const response = await fetch(
-        `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&key=${process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY}`
+      console.log(
+        "APIKEY =",
+        process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY
       );
 
-      const data = await response.json();
+      const url = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&key=${process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY}`;
 
+      console.log("URL =", url);
+
+      const res = await fetch(url);
+
+      // ✅ API失敗時
+      if (!res.ok) {
+        console.error("API ERROR:", res.status);
+        alert("書籍取得失敗");
+        return;
+      }
+
+      const data = await res.json();
+
+      console.log("DATA =", data);
+
+      // ✅ 本が見つからない
+      if (!data.items || data.items.length === 0) {
+        alert("本が見つかりません");
+        return;
+      }
+
+      const volumeInfo = data.items[0].volumeInfo;
+
+      // ✅ 表示用
       setBookInfo(data);
 
-      const volumeInfo = data.items?.[0]?.volumeInfo;
+      // ✅ 自動入力
+      setTitle(volumeInfo.title || "");
+      setAuthor(volumeInfo.authors?.join(", ") || "");
+      setPublisher(volumeInfo.publisher || "");
 
-      if (volumeInfo) {
-        setTitle(volumeInfo.title || "");
-        setAuthor(volumeInfo.authors?.join(", ") || "");
-        setPublisher(volumeInfo.publisher || "");
-      }
     } catch (error) {
-      console.error(error);
+      console.error("FETCH ERROR =", error);
+      alert("取得失敗");
     }
   };
 
@@ -51,7 +73,9 @@ export default function NewBookPage() {
 
         {/* ISBN */}
         <div>
-          <label className="block mb-1">ISBN（番号が二つ存在する場合は上の方）</label>
+          <label className="block mb-1">
+            ISBN（番号が二つ存在する場合は上の方）
+          </label>
 
           <input
             type="text"
@@ -75,9 +99,20 @@ export default function NewBookPage() {
           <div className="mt-6 border rounded p-4 space-y-2">
             <h2 className="text-xl font-bold">取得結果</h2>
 
-            <p>タイトル：{bookInfo.items[0].volumeInfo.title}</p>
-            <p>著者：{bookInfo.items[0].volumeInfo.authors?.join(", ")}</p>
-            <p>出版社：{bookInfo.items[0].volumeInfo.publisher}</p>
+            <p>
+              タイトル：
+              {bookInfo.items[0].volumeInfo.title}
+            </p>
+
+            <p>
+              著者：
+              {bookInfo.items[0].volumeInfo.authors?.join(", ")}
+            </p>
+
+            <p>
+              出版社：
+              {bookInfo.items[0].volumeInfo.publisher}
+            </p>
 
             {bookInfo.items[0].volumeInfo.imageLinks?.thumbnail && (
               <img
@@ -95,6 +130,7 @@ export default function NewBookPage() {
 
             <div>
               <label className="block mb-1">タイトル</label>
+
               <input
                 type="text"
                 value={title}
@@ -105,6 +141,7 @@ export default function NewBookPage() {
 
             <div>
               <label className="block mb-1">著者</label>
+
               <input
                 type="text"
                 value={author}
@@ -114,7 +151,10 @@ export default function NewBookPage() {
             </div>
 
             <div>
-              <label className="block mb-1">出版社（任意）</label>
+              <label className="block mb-1">
+                出版社（任意）
+              </label>
+
               <input
                 type="text"
                 value={publisher}
@@ -125,6 +165,7 @@ export default function NewBookPage() {
 
             <div>
               <label className="block mb-1">カテゴリー</label>
+
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
@@ -140,19 +181,24 @@ export default function NewBookPage() {
             </div>
 
             <div>
-  <label className="block mb-1">所有者(必須・slackの表示名)・あるいは図書館の本の紹介</label>
-
-  <input
-    type="text"
-    value={owner}
-    onChange={(e) => setOwner(e.target.value)}
-    className="border rounded px-3 py-2 w-full"
-    placeholder="例：田中"
-  />
-</div>
-            <div>
-              <label className="block mb-1">所有理由(任意)
+              <label className="block mb-1">
+                所有者(必須・slackの表示名)・あるいは図書館の本の紹介
               </label>
+
+              <input
+                type="text"
+                value={owner}
+                onChange={(e) => setOwner(e.target.value)}
+                className="border rounded px-3 py-2 w-full"
+                placeholder="例：田中"
+              />
+            </div>
+
+            <div>
+              <label className="block mb-1">
+                所有理由(任意)
+              </label>
+
               <textarea
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
@@ -182,7 +228,6 @@ export default function NewBookPage() {
                   });
 
                   if (response.ok) {
-                    // ✅ 成功したら一覧へ
                     router.push("/");
                     router.refresh();
                   } else {
